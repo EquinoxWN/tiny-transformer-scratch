@@ -1,7 +1,7 @@
 # RFC 0001: tiny-transformer-scratch design
 
 - **Status:** Accepted (M1 implemented)
-- **Author:** AUTHOR_NAME
+- **Author:** EquinoxWN
 - **Created:** 2026
 
 ## Problem
