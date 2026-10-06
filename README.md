@@ -7,6 +7,16 @@
 
 Part of my **AI and Machine Learning** list · Python · core project
 
+## Proof it works
+
+The TinyStories file is downloaded from a fixed dataset commit and must match the SHA-256 Hugging Face publishes for it; then each committed tokenizer is measured on 5 MB of text it never saw, losslessly round-tripping every byte. The token counts match the results table exactly:
+
+![Verified download and held-out tokenizer statistics](docs/proof/demo.jpg)
+
+61 tests pass (gradient checks for every operation, tokenizer, download integrity) and the dependencies have no known vulnerabilities:
+
+![ruff, pytest and pip-audit output](docs/proof/tests.jpg)
+
 ## Architecture
 
 **What M1 runs today:**
@@ -54,7 +64,7 @@ Language: **Python** with NumPy only (PyTorch arrives in M3 as the parity check)
 | `src/tiny_transformer_scratch/autograd.py` | Reverse-mode autograd `Tensor`: arithmetic, matmul, reductions, indexing, activations, softmax, cross-entropy |
 | `src/tiny_transformer_scratch/gradcheck.py` | Finite-difference gradient checker |
 | `src/tiny_transformer_scratch/bpe.py` | Byte-level BPE tokenizer: train, encode, decode, save, CLI |
-| `src/tiny_transformer_scratch/data.py` | Downloads TinyStories into `data/` (git-ignored) |
+| `src/tiny_transformer_scratch/data.py` | Downloads TinyStories from a fixed commit into `data/` (git-ignored) and checks its SHA-256 |
 | `artifacts/tokenizer-*.json` | Tokenizers trained on TinyStories (512, 1024, 4096 tokens) |
 
 ## Run it
@@ -84,7 +94,7 @@ Latest local run (full detail in [docs/results/m1.md](docs/results/m1.md)):
 
 | Check | Result |
 |---|---|
-| Test suite | 56 passed, 0 failed |
+| Test suite | 61 passed, 0 failed |
 | Gradient checks vs finite differences | 32 operations, worst error 1.5e-9 (threshold 1e-6) |
 | Tokenizer round trip (held-out TinyStories, emoji, CJK, random Unicode) | lossless |
 | Compression on 5 MB of held-out TinyStories (vocab 1024) | 3.11 bytes per token |
@@ -96,7 +106,7 @@ CI re-runs the test suite on every push.
 
 ```mermaid
 mindmap
-  root((56 tests pass))
+  root((61 tests pass))
     Gradient checks 32
       broadcasting arithmetic
       batched matmul
