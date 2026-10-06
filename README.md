@@ -3,7 +3,7 @@
 [![ci](https://github.com/EquinoxWN/tiny-transformer-scratch/actions/workflows/ci.yml/badge.svg)](https://github.com/EquinoxWN/tiny-transformer-scratch/actions/workflows/ci.yml)
 ![status](https://img.shields.io/badge/status-M1%20done%2C%20M2%20in%20progress-yellow)
 
-> Understand how ChatGPT actually works by building a small one end to end: tokenizer, training and text generation.
+> Understand how ChatGPT works by building it from scratch, starting at the bottom: a NumPy autograd engine with every gradient checked numerically, and a byte-level BPE tokenizer trained on TinyStories.
 
 Part of my **AI and Machine Learning** list · Python · core project
 
@@ -51,11 +51,11 @@ _Steps 1 and 2 are built and tested (M1); the rest is on the [roadmap](#roadmap)
 
 ## Tech stack
 
-| Area | Tools |
-|---|---|
-| Core | Python, NumPy autograd written from scratch, PyTorch reference version |
-| Data | TinyStories dataset, byte-pair-encoding tokenizer |
-| Test/Viz | finite-difference gradient checks, loss curves, attention maps |
+| Area | In M1 | Planned |
+|---|---|---|
+| Core | Python, NumPy autograd written from scratch | Transformer blocks, AdamW training, KV-cache generation, PyTorch reference |
+| Data | TinyStories (pinned, SHA-256 checked), byte-level BPE tokenizer | - |
+| Test / viz | Finite-difference gradient checks | Loss curves, attention maps |
 
 Language: **Python** with NumPy only (PyTorch arrives in M3 as the parity check).
 
@@ -164,7 +164,7 @@ What this repo must show before it counts as done:
 ## Why it matters
 
 - **Interview angle:** 'Explain attention and how an LLM generates text'.
-- **Upstream I'm contributing to:** PyTorch (Meta) tutorials and docs.
+- **Upstream I'd like to contribute to:** PyTorch (Meta) tutorials and docs.
 
 ## Design docs
 
