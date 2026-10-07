@@ -49,6 +49,12 @@ _Steps 1 and 2 are built and tested (M1); the rest is on the [roadmap](#roadmap)
 5. Generation uses a KV cache so each new token does not recompute the whole sequence, with temperature and top-k sampling.
 6. The same model is rewritten in PyTorch, and outputs are checked to match.
 
+## Who it helps
+
+- **Who:** Learners who want to understand how language models work underneath.
+- **The problem:** Frameworks hide how gradients are computed and how text becomes tokens.
+- **How to use it:** Read and run the NumPy autograd engine, where every gradient is checked numerically, and the byte-level BPE tokenizer trained on a pinned, checksum-verified TinyStories file.
+
 ## Tech stack
 
 | Area | In M1 | Planned |
