@@ -8,10 +8,10 @@ version = "0.1.0"
 description = "Understand how ChatGPT actually works by building a small one end to end: tokenizer, training and text generation."
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = ["numpy>=2.0"]
+dependencies = ["numpy>=2.4"]
 
 [project.optional-dependencies]
-dev = ["pytest>=8", "ruff>=0.6", "pip-audit>=2.7"]
+dev = ["pytest>=9.2", "ruff>=0.17", "pip-audit>=2.10"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
