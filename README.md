@@ -13,7 +13,7 @@ The TinyStories file is downloaded from a fixed dataset commit and must match th
 
 ![Verified download and held-out tokenizer statistics](docs/proof/demo.jpg)
 
-61 tests pass (gradient checks for every operation, tokenizer, download integrity) and the dependencies have no known vulnerabilities:
+85 tests pass (gradient checks for every operation, tokenizer, download integrity) and the dependencies have no known vulnerabilities:
 
 ![ruff, pytest and pip-audit output](docs/proof/tests.jpg)
 
@@ -100,35 +100,39 @@ Latest local run (full detail in [docs/results/m1.md](docs/results/m1.md)):
 
 | Check | Result |
 |---|---|
-| Test suite | 61 passed, 0 failed |
+| Test suite | 85 passed, 0 failed |
 | Gradient checks vs finite differences | 32 operations, worst error 1.5e-9 (threshold 1e-6) |
 | Tokenizer round trip (held-out TinyStories, emoji, CJK, random Unicode) | lossless |
 | Compression on 5 MB of held-out TinyStories (vocab 1024) | 3.11 bytes per token |
 | Training time, 5 MB of text (vocab 1024) | 1.3 s |
 
-CI re-runs the test suite on every push.
+CI re-runs the test suite on every push. The 10 quality rules and the mutation check are recorded in [docs/quality/2026-11-01.md](docs/quality/2026-11-01.md).
 
 ### Test map
 
 ```mermaid
 mindmap
-  root((61 tests pass))
+  root((85 tests pass))
     Gradient checks 32
       broadcasting arithmetic
       batched matmul
       softmax and log softmax
       cross entropy
       worst error 1.5e-9
-    Autograd behaviour 6
+    Autograd behaviour 12
       stable softmax at 1000
-      no_grad
+      no_grad, nested and per thread
+      mean over one axis
+      cross entropy shape checks
       10000 node graph
       a classifier that learns
-    Tokenizer 17
+    Tokenizer 35
       emoji, accents, CJK round trips
-      deterministic training
+      deterministic training, ties to the smallest pair
+      earliest merge applied first
       special tokens
-      save and load
+      save and load, malformed files refused
+      CLI refuses bad numbers and empty input
 ```
 
 Compression on held-out TinyStories text (higher is better):
