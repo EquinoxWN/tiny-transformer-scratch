@@ -2,24 +2,31 @@
 
 from __future__ import annotations
 
+import threading
 from collections.abc import Callable, Iterator, Sequence
 from contextlib import contextmanager
 from typing import Any
 
 import numpy as np
 
-_grad_enabled = True
+# Per thread, so no_grad() in one thread (inference) cannot stop another thread's training graph.
+_state = threading.local()
+
+
+def _grad_enabled() -> bool:
+    """Whether this thread records the graph."""
+    return getattr(_state, "enabled", True)
 
 
 @contextmanager
 def no_grad() -> Iterator[None]:
-    """Disable graph recording inside the block, e.g. for inference."""
-    global _grad_enabled
-    previous, _grad_enabled = _grad_enabled, False
+    """Disable graph recording in this thread inside the block, e.g. for inference."""
+    previous = _grad_enabled()
+    _state.enabled = False
     try:
         yield
     finally:
-        _grad_enabled = previous
+        _state.enabled = previous
 
 
 def _unbroadcast(grad: np.ndarray, shape: tuple[int, ...]) -> np.ndarray:
@@ -79,7 +86,7 @@ class Tensor:
     ) -> Tensor:
         """Wrap data as an op output, recording the graph when needed."""
         out = Tensor(data)
-        if _grad_enabled and any(p.requires_grad for p in parents):
+        if _grad_enabled() and any(p.requires_grad for p in parents):
             out.requires_grad = True
             out._parents = tuple(parents)
             out._backward = backward

@@ -172,8 +172,12 @@ class BPETokenizer:
             "special_tokens": self.special,
             "merges": [list(m) for m in self.merges],
         }
-        Path(path).parent.mkdir(parents=True, exist_ok=True)
-        Path(path).write_text(json.dumps(doc) + "\n", encoding="utf-8")
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        # Write then rename, so an interrupted save never leaves a truncated tokenizer behind.
+        tmp = path.with_name(path.name + ".tmp")
+        tmp.write_text(json.dumps(doc) + "\n", encoding="utf-8")
+        tmp.replace(path)
 
     @classmethod
     def load(cls, path: str | Path) -> BPETokenizer:
@@ -181,8 +185,16 @@ class BPETokenizer:
         doc = json.loads(Path(path).read_text(encoding="utf-8"))
         if doc.get("version") != 1:
             raise ValueError(f"unsupported tokenizer version {doc.get('version')!r}")
+        merges = doc.get("merges")
+        if not isinstance(merges, list):
+            raise ValueError("tokenizer file has no merges list")
+        for i, m in enumerate(merges):
+            # Merge i may only combine bytes (0-255) and tokens made by earlier merges.
+            ok = isinstance(m, list) and len(m) == 2
+            if not ok or not all(type(x) is int and 0 <= x < 256 + i for x in m):
+                raise ValueError(f"merge {i} must be two ids of earlier tokens, got {m!r}")
         specials = sorted(doc["special_tokens"], key=doc["special_tokens"].get)
-        return cls([tuple(m) for m in doc["merges"]], specials, doc["pattern"])
+        return cls([tuple(m) for m in merges], specials, doc["pattern"])
 
 
 def _read(path: str, max_bytes: int, skip_bytes: int = 0) -> str:
@@ -193,23 +205,39 @@ def _read(path: str, max_bytes: int, skip_bytes: int = 0) -> str:
     return raw.decode("utf-8", errors="ignore")
 
 
+def _count(minimum: int):
+    """argparse type for an integer of at least minimum."""
+
+    def parse(value: str) -> int:
+        n = int(value)
+        if n < minimum:
+            raise argparse.ArgumentTypeError(f"must be at least {minimum}, got {n}")
+        return n
+
+    return parse
+
+
 def main(argv: list[str] | None = None) -> None:
     """Command-line entry point: train or report stats."""
     parser = argparse.ArgumentParser(description="Byte-level BPE tokenizer")
     sub = parser.add_subparsers(dest="cmd", required=True)
     t = sub.add_parser("train", help="learn merges from a text file")
     t.add_argument("--input", required=True)
-    t.add_argument("--vocab-size", type=int, default=1024)
-    t.add_argument("--max-bytes", type=int, default=5_000_000)
+    t.add_argument("--vocab-size", type=_count(257), default=1024)
+    t.add_argument("--max-bytes", type=_count(1), default=5_000_000)
     t.add_argument("--out", required=True)
     s = sub.add_parser("stats", help="measure compression on a text file")
     s.add_argument("--tokenizer", required=True)
     s.add_argument("--input", required=True)
-    s.add_argument("--max-bytes", type=int, default=1_000_000)
-    s.add_argument("--skip-bytes", type=int, default=0, help="measure on held-out text past this offset")
+    s.add_argument("--max-bytes", type=_count(1), default=1_000_000)
+    s.add_argument(
+        "--skip-bytes", type=_count(0), default=0, help="measure on held-out text past this offset"
+    )
     args = parser.parse_args(argv)
 
     text = _read(args.input, args.max_bytes, getattr(args, "skip_bytes", 0))
+    if not text:
+        parser.error(f"no text read from {args.input} (empty file, or --skip-bytes past its end)")
     if args.cmd == "train":
         start = time.perf_counter()
         tok = BPETokenizer.train(text, args.vocab_size, special_tokens=[END_OF_TEXT])
