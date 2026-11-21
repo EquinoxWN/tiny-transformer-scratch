@@ -84,6 +84,14 @@ def test_gradients_accumulate_across_backward_calls():
     assert a.grad.tolist() == [6.0]
 
 
+def test_second_backward_through_same_graph_adds_one_gradient():
+    a = Tensor(np.array([2.0]), requires_grad=True)
+    loss = (a * 3).sum()
+    loss.backward()
+    loss.backward()
+    assert a.grad.tolist() == [6.0]  # intermediate grads from the first pass must not be re-sent
+
+
 def test_no_grad_records_nothing():
     a = Tensor(np.ones(3), requires_grad=True)
     with no_grad():

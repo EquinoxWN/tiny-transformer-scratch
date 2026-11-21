@@ -58,8 +58,6 @@ class Tensor:
         self._backward: Callable[[np.ndarray], None] | None = None
         self._op = ""
 
-    # ---- basics -----------------------------------------------------------
-
     @property
     def shape(self) -> tuple[int, ...]:
         return self.data.shape
@@ -112,12 +110,13 @@ class Tensor:
             seen.add(id(node))
             stack.append((node, True))
             stack.extend((p, False) for p in node._parents if id(p) not in seen)
+        for node in order:
+            if node._backward is not None:  # interior grads are per pass; only leaves accumulate
+                node.grad = None
         self.grad = _as_array(grad) if self.grad is None else self.grad + _as_array(grad)
         for node in reversed(order):
             if node._backward is not None and node.grad is not None:
                 node._backward(node.grad)
-
-    # ---- elementwise arithmetic ------------------------------------------
 
     def __add__(self, other: Any) -> Tensor:
         other = _lift(other)
@@ -169,8 +168,6 @@ class Tensor:
             self.data**e, (self,), "pow", lambda g: self._accumulate(g * e * self.data ** (e - 1))
         )
 
-    # ---- linear algebra and shape ----------------------------------------
-
     def __matmul__(self, other: Any) -> Tensor:
         other = _lift(other)
         if self.ndim < 2 or other.ndim < 2:
@@ -218,8 +215,6 @@ class Tensor:
             self._accumulate(full)
 
         return Tensor._result(self.data[index], (self,), "index", backward)
-
-    # ---- nonlinearities ---------------------------------------------------
 
     def exp(self) -> Tensor:
         """Elementwise e**x."""
