@@ -13,7 +13,7 @@ The TinyStories file is downloaded from a fixed dataset commit and must match th
 
 ![Verified download and held-out tokenizer statistics](docs/proof/demo.jpg)
 
-85 tests pass (gradient checks for every operation, tokenizer, download integrity) and the dependencies have no known vulnerabilities:
+86 tests pass (gradient checks for every operation, tokenizer, download integrity) and the dependencies have no known vulnerabilities:
 
 ![ruff, pytest and pip-audit output](docs/proof/tests.jpg)
 
@@ -100,7 +100,7 @@ Latest local run (full detail in [docs/results/m1.md](docs/results/m1.md)):
 
 | Check | Result |
 |---|---|
-| Test suite | 85 passed, 0 failed |
+| Test suite | 86 passed, 0 failed |
 | Gradient checks vs finite differences | 32 operations, worst error 1.5e-9 (threshold 1e-6) |
 | Tokenizer round trip (held-out TinyStories, emoji, CJK, random Unicode) | lossless |
 | Compression on 5 MB of held-out TinyStories (vocab 1024) | 3.11 bytes per token |
@@ -112,7 +112,7 @@ CI re-runs the test suite on every push. The 10 quality rules and the mutation c
 
 ```mermaid
 mindmap
-  root((85 tests pass))
+  root((86 tests pass))
     Gradient checks 32
       broadcasting arithmetic
       batched matmul

@@ -67,8 +67,6 @@ class BPETokenizer:
     def vocab_size(self) -> int:
         return len(self.vocab) + len(self.special)
 
-    # ---- training ---------------------------------------------------------
-
     @classmethod
     def train(
         cls, text: str, vocab_size: int, special_tokens: list[str] | None = None, pattern: str = PATTERN
@@ -120,8 +118,6 @@ class BPETokenizer:
             del where[best]
         return cls(merges, special_tokens, pattern)
 
-    # ---- encoding ---------------------------------------------------------
-
     def _encode_chunk(self, chunk: str) -> list[int]:
         """Apply merges to one pre-token, lowest rank first."""
         cached = self._cache.get(chunk)
@@ -161,8 +157,6 @@ class BPETokenizer:
             else:
                 raise KeyError(f"unknown token id {i}")
         return buf.decode("utf-8", errors="replace")
-
-    # ---- persistence ------------------------------------------------------
 
     def save(self, path: str | Path) -> None:
         """Write the tokenizer as JSON."""
